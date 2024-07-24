@@ -1,21 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace OscDotNet.Lib
+﻿namespace OscDotNet.Lib
 {
-    /// <summary>
-    /// An Open Sound Control type tag value.
-    /// See http://opensoundcontrol.org/spec-1_0
-    /// </summary>
-    public enum TypeTag 
-        : byte
-    {
-        Unknown = 0,
-        OscInt32 = (byte)'i',       // int32
-        OscFloat32 = (byte)'f',     // float32
-        OscString = (byte)'s',      // Osc-string
-        OscBlob = (byte)'b',        // Osc-blob
+  /// <summary>
+  ///   An Open Sound Control type tag value.
+  ///   See http://opensoundcontrol.org/spec-1_0
+  /// </summary>
+  public enum TypeTag
+    : byte
+  {
+    Unknown = 0,
+    OscInt32 = (byte)'i', // int32
+    OscFloat32 = (byte)'f', // float32
+    OscString = (byte)'s', // Osc-string
+    OscBlob = (byte)'b' // Osc-blob
 
 /*      // TODO
         OscInt64 = (byte)'h',       // 64 bit big-endian two's complement integer
@@ -31,6 +27,5 @@ namespace OscDotNet.Lib
         OscArrayBegin = (byte)'[',	// Indicates the beginning of an array. The tags following are for data in the Array until a close brace tag is reached.
         OscArrayEnd = (byte)']'	    // Indicates the end of an array.
 */
-    }
+  }
 }
-

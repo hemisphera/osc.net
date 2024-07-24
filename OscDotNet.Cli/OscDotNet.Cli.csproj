@@ -1,11 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net5.0</TargetFramework>
-  </PropertyGroup>
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net5.0</TargetFramework>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\OscDotNet.Lib\OscDotNet.Lib.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\OscDotNet.Lib\OscDotNet.Lib.csproj"/>
+    </ItemGroup>
 </Project>
