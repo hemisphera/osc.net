@@ -2,7 +2,7 @@
 using OscDotNet.Lib;
 using Xunit;
 
-namespace OscDotNet.Tests
+namespace OscDotNet.Tests.Message
 {
   public class MessageDispatchTests
   {
@@ -10,22 +10,28 @@ namespace OscDotNet.Tests
     public void MessageDispatch_Test_Dispatch()
     {
       var dispatch = new MessageDispatch();
-      var builder1 = new MessageBuilder();
-      builder1.SetAddress("/test1");
+      var builder1 = new MessageBuilder
+      {
+        Address = "/test1"
+      };
       builder1.PushAtom(1);
 
-      var builder2 = new MessageBuilder();
-      builder2.SetAddress("/test2");
+      var builder2 = new MessageBuilder
+      {
+        Address = "/test2"
+      };
       builder2.PushAtom("TEST");
 
-      var builder3 = new MessageBuilder();
-      builder3.SetAddress("/test3");
+      var builder3 = new MessageBuilder
+      {
+        Address = "/test3"
+      };
       builder3.PushAtom("TEST2");
 
       var address = "";
       var value = new Atom();
 
-      Action<Message> callback = m =>
+      Action<Lib.Message> callback = m =>
       {
         address = m.Address;
         value = m.Atoms[0];
