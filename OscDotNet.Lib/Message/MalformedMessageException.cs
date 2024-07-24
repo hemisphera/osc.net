@@ -4,26 +4,22 @@ namespace OscDotNet.Lib
 {
   public class MalformedMessageException : InvalidOperationException
   {
-    public MalformedMessageException(string message, byte[] data)
+    public MalformedMessageException(string message, byte[] data, string address = null)
       : base(message)
     {
-      if (data != null)
-      {
-        MessageData = new byte[data.Length];
-        Array.Copy(data, MessageData, data.Length);
-      }
+      MessageData = data;
+      Address = address;
     }
 
-    public MalformedMessageException(string message, byte[] data, Exception innerException)
+    public MalformedMessageException(string message, byte[] data, Exception innerException, string address = null)
       : base(message, innerException)
     {
-      if (data != null)
-      {
-        MessageData = new byte[data.Length];
-        Array.Copy(data, MessageData, data.Length);
-      }
+      MessageData = data;
+      Address = address;
     }
 
     public byte[] MessageData { get; }
+
+    public string Address { get; }
   }
 }

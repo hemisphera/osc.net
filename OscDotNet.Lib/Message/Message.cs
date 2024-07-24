@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace OscDotNet.Lib
@@ -9,6 +10,7 @@ namespace OscDotNet.Lib
     {
     }
 
+    public Guid MessageId { get; } = Guid.NewGuid();
     public string Address { get; set; }
     public TypeTag[] TypeTags { get; set; }
     public Atom[] Atoms { get; set; }
@@ -44,6 +46,11 @@ namespace OscDotNet.Lib
           hashCode ^= atom.GetHashCode();
 
       return hashCode;
+    }
+
+    public override string ToString()
+    {
+      return $"{Address} -- {string.Join(" ", this)}";
     }
 
     #region IEnumerable<Atom> Members

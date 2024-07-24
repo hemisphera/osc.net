@@ -10,7 +10,7 @@ namespace OscDotNet.Lib
     }
 
     public OscEndpoint(int port)
-      : this("127.0.0.1", port)
+      : this(null, port)
     {
     }
 
@@ -31,7 +31,7 @@ namespace OscDotNet.Lib
 
     public IPEndPoint CreateIpEndpoint()
     {
-      var addr = IPAddress.Parse(Address);
+      var addr = string.IsNullOrEmpty(Address) ? IPAddress.Any : IPAddress.Parse(Address);
       return new IPEndPoint(addr, Port);
     }
   }

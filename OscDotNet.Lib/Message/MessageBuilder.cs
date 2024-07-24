@@ -8,21 +8,21 @@ namespace OscDotNet.Lib
     private string address = "/";
     private readonly List<Atom> atoms = new();
 
+
+    public string Address
+    {
+      get => address;
+      set
+      {
+        if (value == null) throw new ArgumentNullException(nameof(Address));
+        if (value.Length == 0) throw new ArgumentException("address cannot be empty.", nameof(Address));
+        if (value[0] != '/')
+          throw new ArgumentException("address must begin with a forward-slash ('/').", nameof(Address));
+        address = value;
+      }
+    }
+
     public int AtomCount => atoms.Count;
-
-    public string GetAddress()
-    {
-      return address;
-    }
-
-    public void SetAddress(string address)
-    {
-      if (address == null) throw new ArgumentNullException("address");
-      if (address.Length == 0) throw new ArgumentException("address cannot be empty.", "address");
-      if (address[0] != '/') throw new ArgumentException("address must begin with a forward-slash ('/').", "address");
-
-      this.address = address;
-    }
 
     public Atom GetAtom(int index)
     {

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 namespace OscDotNet.Lib
@@ -9,13 +10,19 @@ namespace OscDotNet.Lib
     public Message Parse(byte[] data)
     {
       var builder = new MessageBuilder();
-      var byteCount = 0;
+      try
+      {
+        var byteIndex = 0;
+        byteIndex = ParseAddress(data, builder, byteIndex);
+        byteIndex = ParseTypeTags(data, builder, byteIndex);
+        ParseMessageData(data, builder, byteIndex);
 
-      ParseAddress(data, builder, ref byteCount);
-      ParseTypeTags(data, builder, ref byteCount);
-      ParseMessageData(data, builder, ref byteCount);
-
-      return builder.ToMessage();
+        return builder.ToMessage();
+      }
+      catch (Exception ex)
+      {
+        throw new MalformedMessageException("Unable to parse message.", data, ex, builder.Address);
+      }
     }
 
     public byte[] Parse(Message message)
@@ -29,23 +36,24 @@ namespace OscDotNet.Lib
       return builder.ToArray();
     }
 
-    private void ParseAddress(byte[] data, MessageBuilder builder, ref int byteCount)
+    private int ParseAddress(byte[] data, MessageBuilder builder, int startIndex)
     {
       var addressBuilder = new StringBuilder();
+      var byteIndex = startIndex;
 
-      while (byteCount < data.Length)
+      while (byteIndex < data.Length)
       {
         var hasNull = false;
 
         for (var i = 0; i < 4; i++)
         {
-          var val = data[byteCount];
+          var val = data[byteIndex];
 
           if (val > byte.MinValue)
           {
-            if (hasNull) throw new MalformedMessageException("Invalid address: address data appearing after null padding at byte position " + byteCount + ".", data);
+            if (hasNull) throw new MalformedMessageException("Invalid address: address data appearing after null padding at byte position " + byteIndex + ".", data);
 
-            if (val == (byte)',') throw new MalformedMessageException("Invalid address: no null padding before typetags begin at byte position " + byteCount + ".", data);
+            if (val == (byte)',') throw new MalformedMessageException("Invalid address: no null padding before typetags begin at byte position " + byteIndex + ".", data);
 
             addressBuilder.Append((char)val);
           }
@@ -54,32 +62,36 @@ namespace OscDotNet.Lib
             hasNull = true;
           }
 
-          byteCount++;
+          byteIndex++;
         }
 
         if (hasNull) break;
       }
 
-      builder.SetAddress(addressBuilder.ToString()); // throws if address is invalid
+      builder.Address = addressBuilder.ToString(); // throws if address is invalid
+      return byteIndex;
     }
 
-    private void ParseTypeTags(byte[] data, MessageBuilder builder, ref int byteCount)
+    private int ParseTypeTags(byte[] data, MessageBuilder builder, int startIndex)
     {
-      while (byteCount < data.Length && data[byteCount] != ',') byteCount++;
+      var byteIndex = startIndex;
 
-      while (byteCount < data.Length)
+      while (byteIndex < data.Length && data[byteIndex] != ',')
+        byteIndex++;
+
+      while (byteIndex < data.Length)
       {
         var hasNull = false;
 
         for (var i = 0; i < 4; i++)
         {
-          var val = data[byteCount];
+          var val = data[byteIndex];
 
-          if (data[byteCount] != ',')
+          if (data[byteIndex] != ',')
           {
             if (val > byte.MinValue)
             {
-              if (hasNull) throw new MalformedMessageException("Invalid type tags: type tag data appearing after null padding at byte pos + " + byteCount + ".", data);
+              if (hasNull) throw new MalformedMessageException("Invalid type tags: type tag data appearing after null padding at byte pos + " + byteIndex + ".", data);
 
               var typeTag = (TypeTag)val;
 
@@ -89,11 +101,14 @@ namespace OscDotNet.Lib
                 case TypeTag.OscFloat32:
                 case TypeTag.OscString:
                 case TypeTag.OscBlob:
+                case TypeTag.OscTrue:
+                case TypeTag.OscFalse:
+                case TypeTag.OscNil:
                   builder.PushAtom(new Atom(typeTag));
                   break;
 
                 default:
-                  throw new MalformedMessageException("Unknown/invalid type tag " + typeTag + " at byte pos " + byteCount + ".", data);
+                  throw new MalformedMessageException("Unknown/invalid type tag " + typeTag + " at byte pos " + byteIndex + ".", data);
               }
             }
             else
@@ -102,43 +117,52 @@ namespace OscDotNet.Lib
             }
           }
 
-          byteCount++;
+          byteIndex++;
         }
 
         if (hasNull) break;
       }
+
+      return byteIndex;
     }
 
-    private void ParseMessageData(byte[] data, MessageBuilder builder, ref int byteCount)
+    private void ParseMessageData(byte[] data, MessageBuilder builder, int startIndex)
     {
+      var byteIndex = startIndex;
       for (var currentAtom = 0; currentAtom < builder.AtomCount; currentAtom++)
       {
+        var canIncrement = true;
         var incrementBy = 4;
 
         switch (builder.GetAtom(currentAtom).TypeTag)
         {
           case TypeTag.OscInt32:
-            var intVal = ParseInt32(data, byteCount);
+            var intVal = ParseInt32(data, byteIndex);
             builder.SetAtom(currentAtom, intVal);
             break;
 
           case TypeTag.OscFloat32:
-            var floatVal = ParseFloat32(data, byteCount);
+            var floatVal = ParseFloat32(data, byteIndex);
             builder.SetAtom(currentAtom, floatVal);
             break;
 
           case TypeTag.OscString:
-            var stringVal = ParseString(data, byteCount, ref incrementBy);
+            var stringVal = ParseString(data, byteIndex, ref incrementBy);
             builder.SetAtom(currentAtom, stringVal);
             break;
 
           case TypeTag.OscBlob:
-            var blobVal = ParseBlob(data, byteCount, ref incrementBy);
+            var blobVal = ParseBlob(data, byteIndex, ref incrementBy);
             builder.SetAtom(currentAtom, blobVal);
+            break;
+
+          case TypeTag.OscNil:
+            canIncrement = false;
             break;
         }
 
-        byteCount += incrementBy;
+        if (canIncrement)
+          byteIndex += incrementBy;
       }
     }
 
@@ -147,7 +171,7 @@ namespace OscDotNet.Lib
       const int incrementBy = 4;
       var tempPos = startPos;
 
-      if (startPos + incrementBy >= data.Length) throw new MalformedMessageException("Missing binary data for int32 at byte index " + startPos + ".", data);
+      if (startPos + incrementBy > data.Length) throw new MalformedMessageException("Missing binary data for int32 at byte index " + startPos + ".", data);
 
       if (BitConverter.IsLittleEndian)
       {
@@ -169,7 +193,7 @@ namespace OscDotNet.Lib
       const int incrementBy = 4;
       var tempPos = startPos;
 
-      if (startPos + incrementBy >= data.Length) throw new MalformedMessageException("Missing binary data for float32 at byte index " + startPos + ".", data);
+      if (startPos + incrementBy > data.Length) throw new MalformedMessageException("Missing binary data for float32 at byte index " + startPos + ".", data);
 
       if (BitConverter.IsLittleEndian)
       {
@@ -188,10 +212,17 @@ namespace OscDotNet.Lib
 
     private string ParseString(byte[] data, int startPos, ref int incrementBy)
     {
-      if (startPos + 4 >= data.Length) throw new MalformedMessageException("Missing binary data for string atom at byte index " + startPos + ".", data);
+      if (startPos + 4 > data.Length)
+        throw new MalformedMessageException("Missing binary data for string atom at byte index " + startPos + ".", data);
 
-      var rawString = ParseBlob(data, startPos, ref incrementBy);
-      return Encoding.ASCII.GetString(rawString);
+      using var ms = new MemoryStream();
+      do
+      {
+        ms.Write(data, startPos, 4);
+        startPos += 4;
+      } while (data[startPos - 1] != 0);
+
+      return Encoding.ASCII.GetString(ms.ToArray()).TrimEnd('\0');
     }
 
     private byte[] ParseBlob(byte[] data, int startPos, ref int incrementBy)
@@ -212,7 +243,7 @@ namespace OscDotNet.Lib
       incrementBy += length;
       incrementBy += 4 - incrementBy % 4;
 
-      if (startPos >= data.Length) throw new MalformedMessageException("Missing binary data for blob atom at byte index " + startPos + ".", data);
+      if (startPos > data.Length) throw new MalformedMessageException("Missing binary data for blob atom at byte index " + startPos + ".", data);
 
       var blob = new byte[length];
       Array.Copy(data, startPos, blob, 0, length);
