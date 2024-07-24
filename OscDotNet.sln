@@ -7,8 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OscDotNet.Lib", "OscDotNet.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OscDotNet.Tests", "OscDotNet.Tests\OscDotNet.Tests.csproj", "{13C6EAD0-ECED-4370-A78D-BBDC1217D402}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OscDotNet.Cli", "OscDotNet.Cli\OscDotNet.Cli.csproj", "{9DAA7E4F-4B0A-421E-9C74-0E7C3E6B01C1}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,10 +21,6 @@ Global
 		{13C6EAD0-ECED-4370-A78D-BBDC1217D402}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{13C6EAD0-ECED-4370-A78D-BBDC1217D402}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{13C6EAD0-ECED-4370-A78D-BBDC1217D402}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9DAA7E4F-4B0A-421E-9C74-0E7C3E6B01C1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9DAA7E4F-4B0A-421E-9C74-0E7C3E6B01C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9DAA7E4F-4B0A-421E-9C74-0E7C3E6B01C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9DAA7E4F-4B0A-421E-9C74-0E7C3E6B01C1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
