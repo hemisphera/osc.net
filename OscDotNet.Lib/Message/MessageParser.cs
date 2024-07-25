@@ -7,6 +7,36 @@ namespace OscDotNet.Lib
 {
   public class MessageParser
   {
+    public bool TryParseBundle(byte[] data, out Message[] messages)
+    {
+      messages = [];
+      if (data.Length < 7) return false;
+
+      using var s = new MemoryStream(data);
+      var buf = new byte[8];
+
+      // #bundle identifier
+      _ = s.Read(buf, 0, buf.Length);
+      if (Encoding.ASCII.GetString(buf[0..7]) != "#bundle") return false;
+
+      // timetag
+      _ = s.Read(buf, 0, buf.Length);
+
+      // messages
+      var messageList = new List<Message>();
+      using var reader = new BinaryReader(s);
+      while (s.Position != s.Length)
+      {
+        var nextBlockLength = ReadInt32(s);
+        var buffer = new byte[nextBlockLength];
+        _ = reader.Read(buffer, 0, buffer.Length);
+        messageList.Add(Parse(buffer));
+      }
+
+      messages = messageList.ToArray();
+      return true;
+    }
+
     public Message Parse(byte[] data)
     {
       var builder = new MessageBuilder();
@@ -166,7 +196,14 @@ namespace OscDotNet.Lib
       }
     }
 
-    private int ParseInt32(byte[] data, int startPos)
+    private static int ReadInt32(MemoryStream s)
+    {
+      var buf = new byte[4];
+      _ = s.Read(buf, 0, buf.Length);
+      return ParseInt32(buf, 0);
+    }
+
+    private static int ParseInt32(byte[] data, int startPos)
     {
       const int incrementBy = 4;
       var tempPos = startPos;
